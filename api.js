@@ -48,7 +48,7 @@ module.exports = {
   data: [],
   getData(callback) {
     if (!this.data.length) {
-      let ids = process.env.IMDB_IDS.split(',');
+      let ids = process.env.IMDB_IDS.split(','); //get the movie ids from env file
       let data = [];
       async.each(
         ids,

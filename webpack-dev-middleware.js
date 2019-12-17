@@ -14,7 +14,8 @@ module.exports = {
       publicPath: webpackConfig.output.publicPath,
       filename: webpackConfig.output.filename,
     }));
-
+    
+    //allows live reload
     app.use(require("webpack-hot-middleware")(compiler, {
       log: console.log,
       path: '/__webpack_hmr',

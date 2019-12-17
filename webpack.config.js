@@ -15,9 +15,9 @@ module.exports = {
   module: {
     rules: [
       {
-        test: /\.js$/,
+        test: /\.js$/,            //for .js file
         use: [{
-          loader: 'babel-loader',
+          loader: 'babel-loader', //This allows transpiling JavaScript files using Babel and webpack. 
           options: {
             "presets": [ [ "env" ] ],
             "plugins": [ "transform-es2015-destructuring", "transform-object-rest-spread", "transform-runtime" ]
