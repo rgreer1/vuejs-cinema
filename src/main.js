@@ -2,12 +2,28 @@ import Vue from 'vue';
 import './style.scss';
 import genres from './util/genres';
 
+import MovieList from './components/MovieList.vue';
+import MovieFilter from './components/MovieFilter.vue';
+
+import VueResource from 'vue-resource';
+
+import moment from 'moment-timezone';
+
+moment.tz.setDefault("UTC");
+Object.defineProperty(Vue.prototype, '$moment', { get() { return this.$root.moment } }); //makes moment available to all components, not just root instance!
+
+//note: Vue.use() only works if library is setup specifically for use with Vue. Some libraryies (eg. Moment.js) don't work this way.
+Vue.use(VueResource); //installs VueResource module as an instance method of our Vue object,  method is http(). We can call this as this.$http.
+
 //root instance
 var app = new Vue({
     el: '#app',
     data: {
         genre: [],
-        time: []
+        time: [],
+        movies: [],
+        moment,
+        day: moment() //moment() constructor will create current datetime by default
     },
     methods: {
         //this method is called in respone to a check-filter event from <movie-list> being recieved by the root instance  
@@ -28,74 +44,14 @@ var app = new Vue({
         }
     },
     components: {
-        'movie-list': {
-            template: `<div id="movie-list">
-                            <div v-for="movie in movies" class="movie" >{{ movie.title }} </div>
-                       </div>`,
-            data: function () {
-                //in components, data must be a function
-                return {
-                    movies: [
-                        { title: 'Pulp Fiction' },
-                        { title: 'Home Alone' },
-                        { title: 'Austin Powers' }
-                    ]
-                }
-            },
-            //following properties allow <movie-list> to recieve values passed in via v-bind directives on the element
-            props: [ 'genre', 'time' ]
-        },
-        'movie-filter': {
-            data() {            //equivalent to data: function () {
-                return {
-                    genres
-                };
-            },
-            //list of filter items for a given type of filter this case our filter type is "genre"
-            template: `<div id="movie-filter">
-                            <h2>Filter results</h2>
-                            <div class="filter-group">
-                                 <check-filter v-for="genre in genres" v-bind:title="genre" v-on:check-filter="checkFilter"></check-filter>
-                            </div>
-                       </div>`,
-            methods:{
-                // his checkFilter method gets called when a check-filter event is recieved by <movie-filter> 
-                //NB: values for category, title and checked come from the custom event "check-filter"
-                checkFilter(category, title, checked) {
-
-                    // emit an event named 'check-filter' passing parameters indicating item type, name and status
-                    // parent component of movie-filter (to be defined) will listen to this event 
-                    // by applying directive v-on:check-filter="checkFilter"
-                    this.$emit('check-filter', category, title, checked);
-                }
-            },
-            components: {
-                'check-filter': {
-                    data() {
-                        return {
-                            checked: false
-                        }
-                    },
-                    props:[ 'title' ],
-
-                    //dynamically toggle assigned style class based on truthiness of data properties
-                    //the following will always assign class "check-filter" but only assign "active" if checked is true
-                    template: `<div v-bind:class="{ 'check-filter': true, active: checked }" v-on:click="checkFilter" >
-                                    <span class="checkbox"></span>
-                                    <span class="check-filter-title">{{ title }}</span>
-                                </div>`,
-                    methods:{
-                        // this checkFilter method gets called when a <check-filter> elemnt is clicked 
-                        checkFilter() {
-                            this.checked = !this.checked;
-
-                            // emit an event named check-filter, with some parameters (our payload)
-                            // <movie-filter> will listen to this event by applying directive v-on:check-filter="checkFilter"
-                            this.$emit('check-filter', 'genre', this.title, this.checked);
-                        }
-                    }
-                }
-            }
-        }
+         //Vue knows to auto convert pascal cased component names into kebab case when including in components list.
+        MovieList,
+        MovieFilter
+    },
+    created() {
+        this.$http.get('/api').then( response => {
+            console.log(response.data);
+            this.movies = response.data;
+        });
     }
 });
