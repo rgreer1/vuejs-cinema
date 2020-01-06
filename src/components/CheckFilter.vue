@@ -24,7 +24,10 @@
 
                 // emit an event named check-filter, with some parameters (our payload)
                 // <movie-filter> will listen to this event by applying directive v-on:check-filter="checkFilter"
-                this.$emit('check-filter', this.category, this.title, this.checked);
+                // this.$emit('check-filter', this.category, this.title, this.checked);
+
+                //later we changed our code to use our new global event bus instead
+                this.$bus.$emit('check-filter', this.category, this.title, this.checked); //Q. what makes $bus a property of "this"
             }
         }
     }

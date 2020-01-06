@@ -1,57 +1,58 @@
 import Vue from 'vue';
 import './style.scss';
-import genres from './util/genres';
 
-import MovieList from './components/MovieList.vue';
-import MovieFilter from './components/MovieFilter.vue';
+//import conponents defined in our project
+import routes from './util/routes';
 
-import VueResource from 'vue-resource';
-
+//import compomnnts defined by node modules included by our package.json
 import moment from 'moment-timezone';
+import VueResource from 'vue-resource';
+import VueRouter from 'vue-router'; 
 
 moment.tz.setDefault("UTC");
-Object.defineProperty(Vue.prototype, '$moment', { get() { return this.$root.moment } }); //makes moment available to all components, not just root instance!
+Object.defineProperty(Vue.prototype, '$moment', { get() { return this.$root.moment } }); //makes moment a public property so available to all components, not just root instance!
 
-//note: Vue.use() only works if library is setup specifically for use with Vue. Some libraryies (eg. Moment.js) don't work this way.
-Vue.use(VueResource); //installs VueResource module as an instance method of our Vue object,  method is http(). We can call this as this.$http.
+//notes regarding Vue.use():
+//  - only works if library is setup specifically for use with Vue. Some libraryies (eg. Moment.js) don't work this way.
+//  - installs module as an instance method of our Vue object (so we can reference as this.$modulename)
+Vue.use(VueResource); 
+Vue.use(VueRouter);
+
+import { checkFilter } from './util/bus'; //import our bus.js from /util folder
+
+//define a "global event bus" as a seperate "empty" Vue instance that will allow events to be picked up by any compoenent across the app 
+const bus = new Vue();
+Object.defineProperty(Vue.prototype, '$bus', { get() { return this.$root.bus }}); //makes bus a public property of the root instance so available to all components
+
+const router = new VueRouter({ routes });
 
 //root instance
-var app = new Vue({
+const app = new Vue({
     el: '#app',
     data: {
         genre: [],
         time: [],
         movies: [],
         moment,
-        day: moment() //moment() constructor will create current datetime by default
+        day: moment(), //moment() constructor will create current datetime by default,
+        bus
     },
     methods: {
-        //this method is called in respone to a check-filter event from <movie-list> being recieved by the root instance  
-        //NB: values for category, title and checked come from the custom event "check-filter"
-        checkFilter(category, title, checked){
-
-            //NB: category can have a value of 'genre' or 'time'. It defines the type of filter (nothing to do with movie categories!)
-            if(checked){
-                // Note: this[category] is equavalent to this.genre or this.time . 
-                // Category variable allows us to determine which type of filter at runtime
-                this[category].push(title);  
-            }else{
-                let index = this[category].indexOf(title);
-                if (index > -1) {
-                    this[category].splice(index, 1); //delete (splice out 1 item) from array
-                }
-            }
-        }
+      
     },
     components: {
          //Vue knows to auto convert pascal cased component names into kebab case when including in components list.
-        MovieList,
-        MovieFilter
     },
+
+    //lifecycle hooks 
     created() {
         this.$http.get('/api').then( response => {
             console.log(response.data);
             this.movies = response.data;
         });
-    }
+
+        //add event listener to gobal event bus that listens to check-filter events
+        this.$bus.$on('check-filter', checkFilter.bind(this)); //call bind method of checkFilter function to set context of "this" within checkFilter
+    },
+    router //destructured assignment!
 });
