@@ -6,6 +6,7 @@
     <title>Vue.js Cinema</title>
     <link rel="icon" href="/public/favicon.ico" type="image/x-icon">
     <link href="https://fonts.googleapis.com/css?family=Orbitron" rel="stylesheet">
+    <!-- Note: v-cloak has to be defined in <head> so it is available immediately when the html loaded in browser -->
     <style>
         [v-cloak] {
             display: none !important;
@@ -18,7 +19,13 @@
         <img src="/public/logo.png">
         <h1>Vue.js Cinema</h1>
     </div>
-    <router-view v-bind:genre="genre" v-bind:time="time" v-bind:movies="movies" v-bind:day="day"></router-view>
+    <!-- 
+        wrapping elements in a <keep-alive> tells Vue to not destroy child components when removed from the DOM, but to keep them in memory instead. 
+        Doing this allows us to preserve our filters when clicking on a movie detail then returning to home.
+    -->
+    <keep-alive>
+        <router-view v-bind:genre="genre" v-bind:time="time" v-bind:movies="movies" v-bind:day="day"></router-view>
+    </keep-alive>
 </div>
 <script src="/dist/build.js"></script>
 </body>

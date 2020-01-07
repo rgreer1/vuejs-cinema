@@ -4,10 +4,12 @@
             <!-- using props to pass movie, sessions and day so each movie-item can render movie info -->
             <movie-item v-for="movie in filteredMovies" v-bind:movie="movie.movie">
                 <div class="movie-sessions">
+                    <!-- note: binding a session.id key to each movie-sessions div makes each div unique to fix problme with tooltips not being attached to correct div when changing tab-->
                     <div 
                         v-for="session in filteredSessions(movie.sessions)" 
                         class="session-time-wrapper tooltip-wrapper"
                         v-tooltip="{ seats: session.seats }"
+                        v-bind:key="session.id"
                     >
                         <div class="session-time">{{ formatSessionTime(session.time) }} </div>
                     </div>
