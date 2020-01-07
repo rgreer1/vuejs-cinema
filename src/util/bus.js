@@ -15,4 +15,9 @@ function checkFilter(category, title, checked){
     }
 }
 
-export { checkFilter }; //using { } to perform an ES6 "destructured assignment" (oooh, fancy word!). Makes each element of given object or array, a property of this object 
+
+function setDay(day){
+    this.day = day;
+}
+
+export { checkFilter, setDay }; //using { } to perform an ES6 "destructured assignment" (oooh, fancy word!). Makes each element of given object or array, a property of this object 

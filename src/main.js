@@ -18,9 +18,13 @@ Object.defineProperty(Vue.prototype, '$moment', { get() { return this.$root.mome
 Vue.use(VueResource); 
 Vue.use(VueRouter);
 
-import { checkFilter } from './util/bus'; //import our bus.js from /util folder
+//import some utility functions from (our unhelpfully named) bus.js in the /util folder. 
+//These functions will be called in response to events recieved from event bus.
+import { checkFilter } from './util/bus'; 
+import { setDay } from './util/bus';
 
-//define a "global event bus" as a seperate "empty" Vue instance that will allow events to be picked up by any compoenent across the app 
+//define "event bus" as an empty global Vue instance called "bus". 
+//This allows components to emit events globally by calling "this.$bus.$emit()", while interested components can listen by calling "this.$bus.$on()" 
 const bus = new Vue();
 Object.defineProperty(Vue.prototype, '$bus', { get() { return this.$root.bus }}); //makes bus a public property of the root instance so available to all components
 
@@ -51,8 +55,56 @@ const app = new Vue({
             this.movies = response.data;
         });
 
-        //add event listener to gobal event bus that listens to check-filter events
+        //add event listeners to gobal event bus that listens for check-filter and set-day events
         this.$bus.$on('check-filter', checkFilter.bind(this)); //call bind method of checkFilter function to set context of "this" within checkFilter
+        this.$bus.$on('set-day', setDay.bind(this)); //custom callback function with day as parameter
     },
-    router //destructured assignment!
+    router //an example of a destructured assignment!
+});
+
+import { addClass, removeClass } from './util/helpers';
+
+let mouseOverHandler = function(event) {
+    let span = event.target.parentNode.getElementsByTagName('SPAN')[0]; //get first span within target element's parent
+    addClass(span, 'tooltip-show');
+};
+
+let mouseOutHandler = function(event) {
+    let span = event.target.parentNode.getElementsByTagName('SPAN')[0]; //get first span within target element's parent 
+    removeClass(span, 'tooltip-show');
+};
+
+
+//define a custom "v-tooltip" directive. Attaches a <span> that shows/hides in response to mouse events.
+Vue.directive('tooltip', {
+
+    //following lifecycle function executes when directive first bound to element.
+    bind(el, bindings) {
+        let span = document.createElement('SPAN');
+        let text = document.createTextNode('Seats available: 200');
+        span.appendChild(text); //insert text inside span
+        addClass(span, 'tooltip');
+        el.appendChild(span); //insert span inside incoming element
+
+        //attach mouse event listeners to div (for non-mobile devices)
+        let div = el.getElementsByTagName('DIV')[0]; //get first div inside incoming element
+        div.addEventListener('mouseover', mouseOverHandler);
+        div.addEventListener('mouseout', mouseOutHandler);
+
+        //attach touch event listeners to div (for mobile devices)
+        div.addEventListener('touchstart', mouseOverHandler);
+        div.addEventListener('touchend', mouseOutHandler);
+
+    },
+    unbind(el) {
+        //free up resources by removing event listeners (when tooltip element removed from DOM?)
+        let div = el.getElementsByTagName('DIV')[0]; //get first div inside incoming element
+        div.removeEventListener('mouseover', mouseOverHandler);
+        div.removeEventListener('mouseout', mouseOutHandler);
+        div.removeEventListener('touchstart', mouseOverHandler);
+        div.removeEventListener('touchend', mouseOutHandler);
+}
+
+
+
 });
